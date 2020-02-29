@@ -23,4 +23,7 @@ jsonpatch BkgOnly.json patch.ERJR_500p0_0p0.json | pyhf cls
 
 pyhf cls ERJR_500p0_0p0.json
 ```
-# 3L-RJ-mimic-likelihood-validation
+
+# Known Issues
+
+These workspaces are the first time that multiple fixed parameters exist in the measurement definition. If using pyhf, take note of this issue [scikit-hep/pyhf#739](https://github.com/scikit-hep/pyhf/issues/739) which will be resolved shortly after these likelihoods are public.
