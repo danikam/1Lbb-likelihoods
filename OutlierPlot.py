@@ -1,5 +1,3 @@
-import json
-import glob
 """
   Date:     200325
   History:  
@@ -20,7 +18,8 @@ import glob
   
   If, for example, one of the signals is called C1N2_Wh_hbb_550_200, where 550 and 200 are the variable model masses, the signal template would be sp.
   """
-
+import json
+import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.interpolate
