@@ -1,15 +1,15 @@
-# JSON Likelihoods for ATLAS SUSY 3L eRJR analysis
+# JSON Likelihoods for 1Lbb Analysis
 
 The JSON likelihoods are serialized in this folder. This is done by providing a background-only workspace containing the signal/control channels at `BkgOnly.json` as well as patch files for each mass point on the signal phase-space explored in the analysis.
 
-Each [jsonpatch](http://jsonpatch.com/) file follows the format `patch.ERJR_mn2_mn1.json` where `mn2` is the mass of the chargino/second lightest-neutralino and `mn1` is the mass of the lightest supersymmetric particle (LSP).
+Each [jsonpatch](http://jsonpatch.com/) file follows the format `patch_C1N2_Wh_hbb_m1_m2.json` where [zzz understand what's going on zzz].
 
 ## Producing signal workspaces
 
 As an example, we use [python jsonpatch](https://python-json-patch.readthedocs.io/en/latest/) here:
 
 ```
-jsonpatch BkgOnly.json patch.ERJR_500p0_0p0.json > ERJR_500p0_0p0.json
+jsonpatch BkgOnly.json patch_C1N2_Wh_hbb_550_200.json > C1N2_Wh_hbb_550_200.json
 ```
 
 ## Computing signal workspaces
@@ -17,13 +17,10 @@ jsonpatch BkgOnly.json patch.ERJR_500p0_0p0.json > ERJR_500p0_0p0.json
 For example, with [pyhf](https://diana-hep.org/pyhf/), you can do any of the following:
 
 ```
-pyhf cls BkgOnly.json -p patch.ERJR_500p0_0p0.json
+pyhf cls BkgOnly.json -p patch_C1N2_Wh_hbb_550_200.json
 
-jsonpatch BkgOnly.json patch.ERJR_500p0_0p0.json | pyhf cls
+jsonpatch BkgOnly.json patch_C1N2_Wh_hbb_550_200.json | pyhf cls
 
-pyhf cls ERJR_500p0_0p0.json
+pyhf cls C1N2_Wh_hbb_550_200.json
 ```
 
-# Known Issues
-
-These workspaces are the first time that multiple fixed parameters exist in the measurement definition. If using pyhf, take note of this issue [scikit-hep/pyhf#739](https://github.com/scikit-hep/pyhf/issues/739) which will be resolved shortly after these likelihoods are public.
