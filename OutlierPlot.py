@@ -1,11 +1,34 @@
 import json
 import glob
+"""
+  Date:     200325
+  History:  
+    - Originally written by Giordon Stark as a python notebook for the 3L-RJ likelihood validation (https://github.com/kratsg/3L-RJ-mimic-likelihood-validation/blob/master/OutlierPlot.ipynb)
+    - Adapted and generalized to script by Danika MacDonell [March 25, 2020]
+    
+  Details:  Script to visualize the fractional size of the systematics for pyhf likelihoods at each mass point, where the systematics are added together in quadrature. Should be run in a directory containing the background-only json likelihood file, along with a patch json likelihood file for each signal point. Assumes that the model has two variable mass points, and the signals in the json patch files are named as such.
+  
+  Usage:
+  >> python OutlierPlot.py --signal_template <signal_template_{}_{}_for_masses> --v_max <max colourbar amplitude> --x_label <x axis label> --y_label <y axis label>
+  
+  Example for 1Lbb Wh analysis (https://glance.cern.ch/atlas/analysis/analyses/details.php?id=2969):
+  
+  >> python OutlierPlot.py --signal_template C1N2_Wh_hbb_{}_{} --v_max 10 --x_label '$m(\tilde{\chi}_{1}^{\pm}/\tilde{\chi}_{2}^{0})$ [GeV]' --y_label '$m(\tilde{\chi}_{1}^{0})$ [GeV]'
+  
+  The signal template is the name of an arbitrary signal in the json patch files, with the signal masses left as {}. Given a background-only file and a patch file, the signal name can be found under "samples" in the output of:
+  >> jsonpatch BkgOnly.json patch_XXX.json | pyhf inspect
+  
+  If, for example, one of the signals is called C1N2_Wh_hbb_550_200, where 550 and 200 are the variable model masses, the signal template would be sp.
+  """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.interpolate
 from parse import *
 import click
 import pyhf
+plt.rc('xtick', labelsize=18)
+plt.rc('ytick', labelsize=18)
 
 def handle_deltas(delta_up, delta_dn):
     nom_is_center = np.bitwise_or(
@@ -58,8 +81,20 @@ def process_patch(p):
               default=10,
               required=False
               )
+@click.option(
+              "--x_label",
+              help="x label for interpolated plot of fractional systematics",
+              default=None,
+              required=False
+              )
 
-def outlier_plot(signal_template, v_max):
+@click.option(
+              "--y_label",
+              help="y label for interpolated plot of fractional systematics",
+              default=None,
+              required=False
+              )
+def outlier_plot(signal_template, v_max, x_label, y_label):
 
     patches = [json.load(open(x)) for x in glob.glob('patch*.json')]
     grouped_patches = {x[0]['value']['name']:{p['path']:p for p in x if p['op'] == 'add'} for x in patches if 'value' in x[0]}
@@ -117,9 +152,15 @@ def outlier_plot(signal_template, v_max):
             [[float(m) for m in [parse(sig_name_template, k)[0], parse(sig_name_template, k)[1]]] + v.get(channel, np.array([0.0]*channel_bins[channel])).tolist() for k,v in data.items()
             ]
         )
-        x,y = np.mgrid[min(frac_systs[:,0]):max(frac_systs[:,0]):100j,min(frac_systs[:,1]):max(frac_systs[:,1]):100j]
+        x_min, x_max = min(frac_systs[:,0]), max(frac_systs[:,0])
+        y_min, y_max = min(frac_systs[:,1]), max(frac_systs[:,1])
+        x,y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
         for jbin in range(2,2+channel_bins[channel]):
             f = plt.figure(figsize =(12, 6)); ax=f.add_subplot(1,1,1)
+            if x_label != None: ax.set_xlabel(x_label, fontsize=20)
+            if y_label != None: ax.set_ylabel(y_label, fontsize=20)
+            ax.set_xlim(x_min-25, x_max+25)
+            ax.set_ylim(y_min-25, y_max+25)
             bin_number = jbin - 1
             frac_systs = frac_systs[frac_systs[:, jbin] != 0]   # Remove any points with zero amplitude
             
@@ -130,22 +171,24 @@ def outlier_plot(signal_template, v_max):
             #z = np.log(z)
             ax.scatter(frac_systs[:,0],frac_systs[:,1], c = frac_systs[:,jbin], edgecolors='w', vmin = vmin, vmax = vmax)
             im = ax.contourf(x,y,z, levels = np.linspace(vmin,vmax,100))
-            #f.colorbar(im, cax=ax[1])
-            f.colorbar(im, ax=ax, label='$\oplus$ (histosys, normsys, staterr)')
-            if channel_bins[channel] < 2: ax.set_title(channel_names[channel])
-            else: ax.set_title(f'{channel_names[channel]} (Bin {bin_number})')
+            cb = plt.colorbar(im, ax=ax)
+            cb.set_label(label='$\oplus$ (histosys, normsys, staterr)', fontsize=18)
+            if channel_bins[channel] < 2: ax.set_title(channel_names[channel], fontsize=20)
+            else: ax.set_title(f'{channel_names[channel]} (Bin {bin_number})', fontsize=20)
             
-            outliers = np.asarray(
-                [list(map(lambda x: float(x.replace('p','.')),o[0].split('hbb')[-1].split('_')[1:3])) + [o[-2]] for o in outliers
+            outliers_chan = np.asarray(
+                [[float(parse(sig_name_template, o[0])[0]), float(parse(sig_name_template, o[0])[1])] + [o[-2]] for o in outliers
                  if o[1] == channel and o[2] == jbin-2]
             )
-            #print(outliers)
             
-            if outliers.shape[0]:
-                ax.scatter(outliers[:,0],outliers[:,1], c = outliers[:,2], vmin = 0, vmax = 20, cmap = 'cool')
-            for o in outliers:
+            #print(outliers_chan)
+            
+            if outliers_chan.shape[0]:
+                ax.scatter(outliers_chan[:,0],outliers_chan[:,1], c = outliers_chan[:,2], vmin = 0, vmax = 20, cmap = 'cool')
+            for o in outliers_chan:
                 ax.text(o[0]+5,o[1]+5,'{:.2f}'.format(o[2]), c='r')
         
+            plt.tight_layout()
             plt.savefig(f'{channel_names[channel]}_bin{bin_number}.png')
             plt.close()
 
