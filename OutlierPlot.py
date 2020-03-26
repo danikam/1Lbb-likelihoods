@@ -1,7 +1,7 @@
 """
   Date:     200325
   History:  
-    - Originally written by Giordon Stark as a python notebook for the 3L-RJ likelihood validation (https://github.com/kratsg/3L-RJ-mimic-likelihood-validation/blob/master/OutlierPlot.ipynb)
+    - Originally written as a python notebook by Lukas Heinrich, and adapted for the 3L-RJ likelihood validation by Giordon Stark (https://github.com/kratsg/3L-RJ-mimic-likelihood-validation/blob/master/OutlierPlot.ipynb)
     - Adapted and generalized to script by Danika MacDonell [March 25, 2020]
     
   Details:  Script to visualize the fractional size of the systematics for pyhf likelihoods at each mass point, where the systematics are added together in quadrature. Should be run in a directory containing the background-only json likelihood file, along with a patch json likelihood file for each signal point. Assumes that the model has two variable mass points, and the signals in the json patch files are named as such.
@@ -16,7 +16,7 @@
   The signal template is the name of an arbitrary signal in the json patch files, with the signal masses left as {}. Given a background-only file and a patch file, the signal name can be found under "samples" in the output of:
   >> jsonpatch BkgOnly.json patch_XXX.json | pyhf inspect
   
-  If, for example, one of the signals is called C1N2_Wh_hbb_550_200, where 550 and 200 are the variable model masses, the signal template would be sp.
+  If, for example, one of the signals is called C1N2_Wh_hbb_550_200, where 550 and 200 are the variable model masses, the signal template would be C1N2_Wh_hbb_{}_{}.
   """
 import json
 import glob
